@@ -1,12 +1,15 @@
 package co.tiagoaguiar.fitnesstracker
 
+import android.content.DialogInterface
 import android.os.Bundle
 import android.util.Log
+import android.view.View.OnClickListener
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.StringRes
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -43,7 +46,24 @@ class ImcActivity : AppCompatActivity() {
             Log.d("Teste", "Resultado: $result")
 
             val imcResponseId = imcResponse(result)
-            Toast.makeText(this, imcResponseId, Toast.LENGTH_SHORT).show()
+
+            val dialog = AlertDialog.Builder(this)
+
+            val title = getString(R.string.imc_response, result)
+
+            dialog.setTitle(getString(R.string.imc_response, result))
+            dialog.setMessage(imcResponseId)
+            dialog.setPositiveButton(android.R.string.ok, object: DialogInterface.OnClickListener{
+                override fun onClick(dialog: DialogInterface?, which: Int) {
+
+                }
+
+                fun OnClick(dialog: DialogInterface?, which: Int){
+
+                }
+            })
+            val d= dialog.create()
+            d.show()
         }
     }
 
