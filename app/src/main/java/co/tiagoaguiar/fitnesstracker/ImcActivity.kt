@@ -1,9 +1,11 @@
 package co.tiagoaguiar.fitnesstracker
 
+import android.content.Context
 import android.content.DialogInterface
 import android.os.Bundle
 import android.util.Log
 import android.view.View.OnClickListener
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
@@ -64,6 +66,9 @@ class ImcActivity : AppCompatActivity() {
             })
             val d= dialog.create()
             d.show()
+
+            val service = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            service.hideSoftInputFromWindow(currentFocus?.windowToken,0)
         }
     }
 
@@ -75,7 +80,7 @@ class ImcActivity : AppCompatActivity() {
             imc < 18.5 -> R.string.imc_low_weight
             imc < 25.0 -> R.string.normal
             imc < 30.0 -> R.string.imc_high_weight
-            imc < 35.0 -> R.string.imc_so_high_weight
+             imc < 35.0 -> R.string.imc_so_high_weight
             imc < 40.0 -> R.string.imc_severely_high_weight
             else -> R.string.imc_extreme_weight
         }
