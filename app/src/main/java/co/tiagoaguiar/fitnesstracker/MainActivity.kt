@@ -5,6 +5,7 @@ import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
@@ -15,8 +16,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
-class MainActivity : AppCompatActivity(), OnItemClickListener {
-
+class MainActivity : AppCompatActivity() {
 
     private lateinit var rvMain: RecyclerView
 
@@ -42,35 +42,33 @@ class MainActivity : AppCompatActivity(), OnItemClickListener {
             )
         )
 
+        val adapter = MainAdapter(mainItems) { id ->
+            when (id) {
+                1 -> {
+                    val intent = Intent(this@MainActivity, ImcActivity::class.java)
+                    startActivity(intent)
+                }
 
-        val adapter = MainAdapter(mainItems, this)
+                2 -> {
+
+                }
+            }
+        }
+
         rvMain = findViewById(R.id.rv_main)
         rvMain.adapter = adapter
         rvMain.layoutManager = GridLayoutManager(this, 2)
-
     }
 
-    override fun onClick(id: Int) {
-        when(id){
-            1->{
-                val intent = Intent(this, ImcActivity::class.java)
-                startActivity(intent)
-            }
-            2->{
-
-            }
-        }
-        Log.i("test", "clicou $id")
-    }
-
-    private inner class MainAdapter(
+    private class MainAdapter(
         private val mainItems: List<MainItem>,
-        private val onItemClickListener: OnItemClickListener,
+        private val onItemClickListener: (Int) -> Unit,
     ) : RecyclerView.Adapter<MainAdapter.MainViewHolder>() {
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MainViewHolder {
-            val view = layoutInflater.inflate(R.layout.main_item, parent, false)
-            return MainViewHolder(view)
 
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MainViewHolder {
+            val view =
+                LayoutInflater.from(parent.context).inflate(R.layout.main_item, parent, false)
+            return MainViewHolder(view)
         }
 
         override fun onBindViewHolder(holder: MainViewHolder, position: Int) {
@@ -82,7 +80,7 @@ class MainActivity : AppCompatActivity(), OnItemClickListener {
             return mainItems.size
         }
 
-        private inner class MainViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        inner class MainViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             fun bind(item: MainItem) {
                 val img: ImageView = itemView.findViewById(R.id.item_img_icon)
                 val name: TextView = itemView.findViewById(R.id.item_txt_name)
@@ -91,17 +89,11 @@ class MainActivity : AppCompatActivity(), OnItemClickListener {
                 img.setImageResource(item.drawableId)
                 name.setText(item.textStringId)
                 container.setBackgroundColor(item.color)
-                onItemClickListener.onClick(item.id)
+
+                container.setOnClickListener {
+                    onItemClickListener.invoke(item.id)
+                }
             }
-
         }
-
-
     }
 }
-
-
-
-
-
-
