@@ -1,10 +1,9 @@
 package co.tiagoaguiar.fitnesstracker
 
 import android.content.Context
-import android.content.DialogInterface
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.view.View.OnClickListener
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
@@ -15,25 +14,30 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
+import co.tiagoaguiar.fitnesstracker.model.Calc
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class ImcActivity : AppCompatActivity() {
 
     private lateinit var editWeight: EditText
     private lateinit var editHeight: EditText
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_imc)
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+
         editWeight = findViewById(R.id.edit_imc_weight)
         editHeight = findViewById(R.id.edit_imc_height)
-
         val btnSend: Button = findViewById(R.id.btn_imc_send)
 
         btnSend.setOnClickListener {
@@ -41,34 +45,41 @@ class ImcActivity : AppCompatActivity() {
                 Toast.makeText(this, R.string.field_messages, Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
+
             val weight = editWeight.text.toString().toInt()
             val height = editHeight.text.toString().toInt()
-
             val result = calculateImc(weight, height)
+
             Log.d("Teste", "Resultado: $result")
 
             val imcResponseId = imcResponse(result)
-
-            val dialog = AlertDialog.Builder(this)
-
             val title = getString(R.string.imc_response, result)
 
-            dialog.setTitle(getString(R.string.imc_response, result))
-            dialog.setMessage(imcResponseId)
-            dialog.setPositiveButton(android.R.string.ok, object: DialogInterface.OnClickListener{
-                override fun onClick(dialog: DialogInterface?, which: Int) {
+            val dialog = AlertDialog.Builder(this)
+                .setTitle(title)
+                .setMessage(imcResponseId)
+                .setPositiveButton(R.string.ok, null)
+                .setNegativeButton(R.string.save) { dialog, which ->
+                    lifecycleScope.launch {
+                        withContext(Dispatchers.IO) {
+                            val app = application as App
+                            val dao = app.db.calcDao()
+                            dao.insert(Calc(type = "imc", res = result))
+                        }
 
+                        runOnUiThread {
+                            val intent = Intent(this@ImcActivity, ListCalcActivity::class.java)
+                            intent.putExtra("type", "imc")
+                            startActivity(intent)
+                        }
+                    }
                 }
+                .create()
 
-                fun OnClick(dialog: DialogInterface?, which: Int){
-
-                }
-            })
-            val d= dialog.create()
-            d.show()
+            dialog.show()
 
             val service = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            service.hideSoftInputFromWindow(currentFocus?.windowToken,0)
+            service.hideSoftInputFromWindow(currentFocus?.windowToken, 0)
         }
     }
 
@@ -80,15 +91,13 @@ class ImcActivity : AppCompatActivity() {
             imc < 18.5 -> R.string.imc_low_weight
             imc < 25.0 -> R.string.normal
             imc < 30.0 -> R.string.imc_high_weight
-             imc < 35.0 -> R.string.imc_so_high_weight
+            imc < 35.0 -> R.string.imc_so_high_weight
             imc < 40.0 -> R.string.imc_severely_high_weight
             else -> R.string.imc_extreme_weight
         }
-
     }
 
     private fun calculateImc(weight: Int, height: Int): Double {
-
         return weight / ((height / 100.0) * (height / 100.0))
     }
 
@@ -98,5 +107,5 @@ class ImcActivity : AppCompatActivity() {
                 && !editWeight.text.toString().startsWith("0")
                 && !editHeight.text.toString().startsWith("0"))
     }
-
 }
+
